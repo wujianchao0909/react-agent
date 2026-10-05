@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+Qwen3-Embedding-0.6B/
+
+chroma_db/
+conversation.db
+reports/
+.env
+.git/
+.idea/
+.vscode/
+tests/
+eval/
+docs/

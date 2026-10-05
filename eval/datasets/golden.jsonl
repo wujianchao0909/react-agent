@@ -1,0 +1,9 @@
+{"id": "rag_001", "category": "rag_hit", "query": "电压是什么？", "expected_tools": ["search_knowledge_real"], "expected_keywords": ["电势差", "电压"], "should_refuse": false}
+{"id": "rag_002", "category": "rag_hit", "query": "什么叫电势差？", "expected_tools": ["search_knowledge_real"], "expected_keywords": ["电势差", "电压"], "should_refuse": false}
+{"id": "rag_003", "category": "rag_miss", "query": "如何做红烧肉？", "expected_tools": ["search_knowledge_real"], "expected_keywords": [], "should_refuse": true}
+{"id": "tool_001", "category": "tool_weather", "query": "北京天气如何？", "expected_tools": ["get_weather_real"], "expected_keywords": ["北京"], "should_refuse": false}
+{"id": "tool_002", "category": "tool_weather", "query": "上海今天天气怎么样？", "expected_tools": ["get_weather_real"], "expected_keywords": ["上海"], "should_refuse": false}
+{"id": "tool_003", "category": "tool_calc", "query": "计算 (100-20)*3", "expected_tools": ["calculator"], "expected_keywords": ["240"], "should_refuse": false}
+{"id": "tool_004", "category": "tool_calc", "query": "sqrt(16) 等于多少？", "expected_tools": ["calculator"], "expected_keywords": ["4"], "should_refuse": false}
+{"id": "chat_001", "category": "no_tool", "query": "你好，介绍一下你自己", "expected_tools": [], "expected_keywords": [], "should_refuse": false}
+{"id": "chat_002", "category": "no_tool", "query": "你能做什么？", "expected_tools": [], "expected_keywords": [], "should_refuse": false}

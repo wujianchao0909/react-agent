@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache
+
+# 数据（大文件，不入库）
+Qwen3-Embedding-0.6B/
+Qwen3-Reranker-0.6B/
+chroma_db/
+conversation.db
+reports/
+*.db
+
+# 环境
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# 系统
+.DS_Store
+Thumbs.db
