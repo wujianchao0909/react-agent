@@ -13,14 +13,14 @@ class Settings(BaseSettings):
     )
 
     # LLM
-    deepseek_api_key: str = "sk-b0096fd449e24084845d075596219fdf"
+    deepseek_api_key: str = "**********"
     deepseek_model: str = "deepseek-flash"
     deepseek_base_url: str = "https://api.deepseek.com"
 
     # Weather
-    qweather_api_key: str = "a8221c922b064f26b4b83919d8bfc8ca"
-    qweather_geo_url: str = "https://mx4t2dwqk4.re.qweatherapi.com/geo/v2/city/lookup"
-    qweather_now_url: str = "https://mx4t2dwqk4.re.qweatherapi.com/v7/weather/now"
+    qweather_api_key: str = "**********"
+    qweather_geo_url: str = "https://**********.re.qweatherapi.com/geo/v2/city/lookup"
+    qweather_now_url: str = "https://**********.re.qweatherapi.com/v7/weather/now"
     http_timeout: float = 5.0
 
     # RAG
