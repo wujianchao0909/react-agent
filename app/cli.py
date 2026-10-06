@@ -9,6 +9,8 @@ async def stream_chat(app, query: str, config: dict):
     print(f"\n用户: {query}")
     print("Agent: ", end="", flush=True)
 
+    buffer: list[str] = []
+
     async for event in app.astream(
         {"messages": HumanMessage(content=query)},
         config=config,
@@ -17,17 +19,22 @@ async def stream_chat(app, query: str, config: dict):
         mode, data = event
         if mode == "messages":
             chunk, _ = data
-            if isinstance(chunk, AIMessage) and chunk.content and not chunk.tool_calls:
-                print(chunk.content, end="", flush=True)
+            if isinstance(chunk, AIMessage) and chunk.content:
+                buffer.append(chunk.content)
 
         elif mode == "updates":
             for node_name, update in data.items():
                 if node_name == "agent":
                     msg = update["messages"][-1]
                     if isinstance(msg, AIMessage) and msg.tool_calls:
+                        buffer.clear()
                         for tc in msg.tool_calls:
                             print(f"\n  🔧 调用 {tc['name']}({tc['args']})")
                             print("Agent: ", end="", flush=True)
+                    else:
+                        for piece in buffer:
+                            print(piece, end="", flush=True)
+                        buffer.clear()
                 elif node_name == "tools":
                     for msg in update["messages"]:
                         name = getattr(msg, "name", "unknown")

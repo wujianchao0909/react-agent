@@ -34,7 +34,9 @@ SAFE_FUNCS = {
     "exp": math.exp,
     "pow": math.pow,
     "floor": math.floor,
-    "ceil": math.ceil
+    "ceil": math.ceil,
+    "pi": math.pi,
+    "e": math.e,
 }
 
 SAFE_CONSTS = {"pi": math.pi, "e": math.e}

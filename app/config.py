@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     # RAG
     embedding_path: str = str(BASE_DIR / "Qwen3-Embedding-0.6B")
+    reranker_path: str = str(BASE_DIR / "Qwen3-Reranker-0.6B")
     chroma_dir: str = str(BASE_DIR / "chroma_db")
     docs_dir: str = str(BASE_DIR / "docs")
     retrieval_k: int = 5

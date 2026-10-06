@@ -1,0 +1,27 @@
+services:
+  api:
+    build: .
+    container_name: react-agent-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - EMBEDDING_PATH=/models/Qwen3-Embedding-0.6B
+      - RERANKER_PATH=/models/Qwen3-Reranker-0.6B
+      - CHROMA_DIR=/data/chroma_db
+      - SQLITE_PATH=/data/conversation.db
+      - DOCS_DIR=/data/docs
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
+    volumes:
+      - ./Qwen3-Embedding-0.6B:/models/Qwen3-Embedding-0.6B:ro
+      - ./Qwen3-Reranker-0.6B:/models/Qwen3-Reranker-0.6B:ro
+      - chroma_data:/data/chroma_db
+      - sqlite_data:/data
+      - ./docs:/data/docs:ro
+    restart: unless-stopped
+
+volumes:
+  chroma_data:
+  sqlite_data:
