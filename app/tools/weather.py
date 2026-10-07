@@ -41,7 +41,9 @@ async def get_weather_real(city:Annotated[str, Field(description="城市名称�
                     f"湿度{now['humidity']}%")
         except httpx.TimeoutException:
             return f"天气查询超时：{city}"
-        except httpx.RequestException as e:
+        except httpx.HTTPError as e:
             return f"天气查询网络错误：{e}"
         except ValueError as e:
             return f"天气接口返回非 JSON：{e}"
+        except Exception as e:
+            return f"天气查询未知错误：{type(e).__name__}: {e}"

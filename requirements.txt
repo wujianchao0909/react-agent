@@ -27,7 +27,10 @@ chromadb>=0.5
 sentence-transformers>=3.0
 rank-bm25>=0.2.2
 jieba>=0.42.1
-
+pypdf>=4.0
+docx2txt>=0.8
+beautifulsoup4>=4.12
+lxml>=5.0
 
 # ============ 异步 SQLite ============
 aiosqlite>=0.20

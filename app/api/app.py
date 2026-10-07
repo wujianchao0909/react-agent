@@ -8,6 +8,7 @@ from app.graph.builder import build_agent_with_memory
 from app.graph.checkpointer import build_checkpointer
 from app.api.routes import chat, health
 from app.rag.rerank import get_reranker
+from app.rag.indexer import sync_index
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,7 +21,13 @@ async def lifespan(app: FastAPI):
       - 自动关闭 checkpointer 连接
     """
     async with build_checkpointer(use_persistent=True) as checkpointer:
+        # 启动时同步知识库（增量，只有变化的文件才重新索引）
+        print("[startup] Syncing knowledge base...")
+        await asyncio.to_thread(sync_index)
+        print("[startup] Knowledge base synced")
+
         app.state.agent = build_agent_with_memory(checkpointer=checkpointer)
+        
         print("[startup] Agent ready, warming up reranker...")
         await asyncio.to_thread(get_reranker)
         print("[startup] Reranker warmed up")

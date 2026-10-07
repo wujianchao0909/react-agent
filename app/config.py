@@ -13,14 +13,14 @@ class Settings(BaseSettings):
     )
 
     # LLM
-    deepseek_api_key: str = "**********"
+    deepseek_api_key: str = "sk-6a4ae5212aeb49e39634d945c4d5e48d"
     deepseek_model: str = "deepseek-flash"
     deepseek_base_url: str = "https://api.deepseek.com"
 
     # Weather
-    qweather_api_key: str = "**********"
-    qweather_geo_url: str = "https://**********.re.qweatherapi.com/geo/v2/city/lookup"
-    qweather_now_url: str = "https://**********.re.qweatherapi.com/v7/weather/now"
+    qweather_api_key: str = "a8221c922b064f26b4b83919d8bfc8ca"
+    qweather_geo_url: str = "https://mx4t2dwqk4.re.qweatherapi.com/geo/v2/city/lookup"
+    qweather_now_url: str = "https://mx4t2dwqk4.re.qweatherapi.com/v7/weather/now"
     http_timeout: float = 5.0
 
     # RAG
@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     reranker_path: str = str(BASE_DIR / "Qwen3-Reranker-0.6B")
     chroma_dir: str = str(BASE_DIR / "chroma_db")
     docs_dir: str = str(BASE_DIR / "docs")
+    manifest_path: str = str(BASE_DIR / "chroma_db" / "manifest.json")
+    supported_exts:str = ".txt, .md, .pdf, .docx, .html, .htm"
     retrieval_k: int = 5
     distance_threshold: float = 1.0
 
@@ -35,3 +37,7 @@ class Settings(BaseSettings):
     sqlite_path: str = str(BASE_DIR / "conversation.db")
 
 settings = Settings()
+
+@property
+def supported_ext_list(self) -> list[str]:
+    return [e.strip().lower() for e in self.supported_exts.split(",") if e.strip()]

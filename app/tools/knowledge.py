@@ -3,27 +3,15 @@ import os
 from typing import Annotated
 from pydantic import Field
 from langchain_core.tools import tool
-from langchain_core.prompts import ChatPromptTemplate
 
 from app.rag.retriever import get_hybrid_retriever
 from app.rag.query_rewrite import rewrite_query
 from app.rag.rerank import rerank
-from app.llm import llm
 
-FINAL_K = 3
-RELATIVE_MARGIN = 0.05
+FINAL_K = 2
+MIN_SCORE = 0.0
+RELATIVE_MARGIN = 3.0
 
-JUDGE_PROMPT = ChatPromptTemplate.from_messages([
-    ("system",
-     "判断以下文档片段是否与用户问题相关。\n"
-     "只输出 yes 或 no，不要解释。\n"
-     "如果文档只是字面相似但语义无关（如都是「天气」但一个问北京一个问上海），输出 no。"),
-    ("human", "问题：{query}\n\n文档：{doc}"),
-])
-
-async def is_relevant(query: str, doc: str) -> bool:
-    result = await (JUDGE_PROMPT | llm).ainvoke({"query": query, "doc": doc[:500]})
-    return "yes" in result.content.lower()
 
 @tool
 async def search_knowledge_real(query: Annotated[str, Field(description="搜索关键词或问题")]) -> str:
@@ -31,13 +19,13 @@ async def search_knowledge_real(query: Annotated[str, Field(description="搜索�
     queries = await rewrite_query(query, n=2)
 
     retriever = get_hybrid_retriever()
-    seen: set[str] = set()
-    candidates = []
-
-    all_docs = await asyncio.gather(*[
+    # 多路并发检索
+    all_results = await asyncio.gather(*[
         asyncio.to_thread(retriever.invoke, q) for q in queries
     ])
-    for docs in all_docs:
+    seen: set[str] = set()
+    candidates = []
+    for docs in all_results:
         for d in docs:
             key = d.page_content[:80]
             if key not in seen:
@@ -47,26 +35,32 @@ async def search_knowledge_real(query: Annotated[str, Field(description="搜索�
     if not candidates:
         return "知识库中未找到相关信息。"
 
+    candidates = candidates[:12]
     ranked = await asyncio.to_thread(rerank, query, candidates, FINAL_K)
 
     if not ranked:
         return "知识库中未找到相关信息。"
 
     top_score = ranked[0][1]
+    print(f"  [rerank] top scores: {[f'{s:.4f}' for _, s in ranked]}")
 
-    kept = []
-    for doc, score in ranked:
-        if await is_relevant(query, doc.page_content):
-            kept.append((doc, score))
-    if not kept:
+    if top_score < MIN_SCORE:
         return "知识库中未找到相关信息。"
 
-    print(f"  [rerank] top scores: {[f'{s:.4f}' for _, s in ranked]}")
+    kept = [(d, s) for d, s in ranked if s >= top_score - RELATIVE_MARGIN]
 
     output = []
     for doc, score in kept:
         source = os.path.basename(doc.metadata.get("source", "unknown"))
-        output.append(f"[来源:{source}，rerank分数:{score:.4f}]\n{doc.page_content}")
-
+        page = doc.metadata.get("page", 0)
+        section = doc.metadata.get("section", "")
+        loc = f"p{page}" if page else ""
+        if section:
+            loc = f"{loc} {section}".strip() if loc else section
+        header = f"[来源:{source}"
+        if loc:
+            header += f" {loc}"
+        header += f"，rerank分数:{score:.4f}]"
+        output.append(f"{header}\n{doc.page_content}")
 
     return "\n\n---\n\n".join(output)

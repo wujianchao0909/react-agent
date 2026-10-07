@@ -45,7 +45,7 @@ print()
 async def main():
     async with build_checkpointer(use_persistent=True) as checkpointer:
         app = build_agent_with_memory(checkpointer=checkpointer)
-        config = {"configurable": {"thread_id": "user-002"}}
+        config = {"configurable": {"thread_id": "test-002"}}
 
         while True:
             q = input("\n请输入问题: ").strip()
