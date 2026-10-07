@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     docs_dir: str = str(BASE_DIR / "docs")
     manifest_path: str = str(BASE_DIR / "chroma_db" / "manifest.json")
     supported_exts:str = ".txt, .md, .pdf, .docx, .html, .htm"
+    device: str = "auto"
     retrieval_k: int = 5
     distance_threshold: float = 1.0
 

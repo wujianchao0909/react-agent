@@ -14,12 +14,20 @@ services:
       - DOCS_DIR=/data/docs
       - HF_HUB_OFFLINE=1
       - TRANSFORMERS_OFFLINE=1
+      - DEVICE=auto
     volumes:
       - ./Qwen3-Embedding-0.6B:/models/Qwen3-Embedding-0.6B:ro
       - ./Qwen3-Reranker-0.6B:/models/Qwen3-Reranker-0.6B:ro
       - chroma_data:/data/chroma_db
       - sqlite_data:/data
       - ./docs:/data/docs:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
     restart: unless-stopped
 
 volumes:

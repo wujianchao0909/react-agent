@@ -16,9 +16,31 @@
 | 工具调用准确率 | **100%** |
 | 关键词命中率 | **100%** |
 | 拒答正确率 | **100%** |
-| 平均延迟 | **~4.1s**（RAG ~7s，工具 ~1.5s）|
+| 平均延迟 | **2.44s**（GPU）/ 5.04s（CPU） |
+| RAG 单条延迟 | **2.4~3.5s**（GPU）/ 9~14s（CPU） |
+| Rerank 加速比 | **~4x**（CPU 14s → GPU 0.3~0.5s） |
 
-> 评测集覆盖 6 类场景：RAG 命中 / RAG 拒答 / 天气工具 / 计算器 / 无工具对话 / 多轮记忆。三次独立评测结果稳定。
+> 评测集覆盖 6 类场景。GPU 版本启用 CUDA 12.1 + PyTorch 2.5.1 + Qwen3-Reranker on GPU，RAG 链路端到端延迟相比 CPU 版本下降约 **50%**。
+
+## GPU 加速
+
+本项目支持 CPU / GPU 双模式运行，通过 `DEVICE` 环境变量控制：
+
+| 模式 | 命令 | 延迟 |
+|---|---|---|
+| **GPU（推荐）** | `DEVICE=auto docker compose up -d` | ~2.4s |
+| CPU | `DEVICE=cpu docker compose up -d` | ~5.0s |
+
+GPU 模式依赖：
+- NVIDIA GPU（≥ 6GB 显存）
+- NVIDIA Container Toolkit（Docker Desktop 已内置）
+- CUDA 12.1 驱动
+
+**GPU 优化的技术路径**：
+- 基础镜像：`nvidia/cuda:12.1.0-cudnn8-runtime-ubuntu22.04`
+- 通过 `docker-compose.yml` 的 `deploy.resources.reservations.devices` 将 GPU 透传给容器
+- `torch==2.5.1+cu121` + `transformers==4.51.0`（识别 Qwen3 的最低版本）
+- 代码层 `device="auto"` 自动检测 CUDA，本地 CPU 环境自动回退
 
 ---
 
@@ -62,6 +84,7 @@
 - **安全工具**：AST 白名单替代 `eval`，杜绝任意代码执行
 - **流式输出**：FastAPI + SSE，5 类事件协议（token / tool_call / tool_result / done / error）
 - **评测驱动**：JSONL 评测集 + 4 项核心指标 + JSON 报告落盘，支持回归对比
+- **GPU 加速**：Docker 容器透传 NVIDIA GPU，Embedding + Reranker 双模型跑在 CUDA 上，Rerank 阶段从 14s 降至亚秒级，RAG 链路端到端延迟下降约 50%
 
 ---
 
@@ -204,6 +227,17 @@ react-agent/
 **现象**：答案开头出现 "I'll search the knowledge base..." 和查询改写变体。
 **原因**：流式模式下，LLM 调工具前输出的「思考」content 在 tool_calls 拼装完成之前就被推送给用户。
 **修复**：按轮缓冲，等 `updates` 事件确认这一轮是否产出 `tool_calls` 后再决定是否推送缓冲内容。
+
+### 5. GPU 环境构建
+
+**现象**：多次构建失败，报 `apt-get exit 100`、`torch==2.6.0 找不到`、`transformers 不识别 qwen3`、`init_empty_weights not defined`。
+
+**修复路径**：
+1. `nvidia/cuda` 基础镜像的 apt 源替换为清华镜像，移除过期的 NVIDIA 仓库列表
+2. PyTorch 用 2.5.1+cu121（国内镜像源尚未同步 2.6.0），`transformers` 升到 4.51.0（识别 Qwen3 的最低要求）
+3. 用约束文件 `pins.txt` 锁定 torch + transformers 版本，避免多依赖冲突
+4. 补装 `accelerate` 解决 `init_empty_weights not defined` 报错
+5. `pip install` 加大 `--timeout 1200 --retries 10 --resume-retries 10` 防止 780MB 的 torch 包下载中断
 
 ---
 

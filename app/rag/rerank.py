@@ -1,22 +1,35 @@
+import torch
 from langchain_core.documents import Document
-
 from app.config import settings
 
 reranker = None
+
+
+def resolve_device() -> str:
+    if settings.device == "auto":
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    return settings.device
+
 
 def get_reranker():
     global reranker
     if reranker is None:
         from sentence_transformers import CrossEncoder
-        print(f"[rerank] 加载模型 {settings.reranker_path} ...")
-        reranker = CrossEncoder(settings.reranker_path, max_length=512)
+        device = resolve_device()
+        print(f"[rerank] loading {settings.reranker_path} on {device}")
+        reranker = CrossEncoder(
+            settings.reranker_path,
+            max_length=512,
+            device=device,
+        )
     return reranker
 
-def rerank(query: str, docs: list[Document], top_k: int = 3) -> list[tuple[Document, float]]:
-    """
-    CrossEncoder 精排：把 (query, doc) 作为一对送入模型打分。
-    返回 [(doc, score), ...]，按分数降序。
-    """
+
+def rerank(
+    query: str,
+    docs: list[Document],
+    top_k: int = 3,
+) -> list[tuple[Document, float]]:
     if not docs:
         return []
     reranker = get_reranker()
@@ -25,6 +38,6 @@ def rerank(query: str, docs: list[Document], top_k: int = 3) -> list[tuple[Docum
     ranked = sorted(
         zip(docs, (float(s) for s in scores)),
         key=lambda x: x[1],
-        reverse=True
+        reverse=True,
     )
     return ranked[:top_k]
